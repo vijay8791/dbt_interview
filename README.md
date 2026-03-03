@@ -4,12 +4,13 @@ This project evaluates your dbt and SQL skills using an embedded [DuckDB](https:
 
 ## Getting Started
 
-This project requires [Dev Containers](https://containers.dev/). You can run it in:
+This project requires [Dev Containers](https://containers.dev/).
 
-- **GitHub Codespaces** — click **Code > Codespaces > Create codespace on main**
-- **VS Code** — install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), then **Reopen in Container**
+1. Clone the repository
+2. Open it in VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
+3. When prompted, click **Reopen in Container** (or run the command manually via `Ctrl+Shift+P` → "Dev Containers: Reopen in Container")
 
-The devcontainer installs all dependencies automatically. Once inside, verify:
+The devcontainer builds a Docker image and installs all dependencies automatically. Once inside, verify:
 
 ```bash
 cd transformation

@@ -1,0 +1,8 @@
+lead_status,status_label,is_active,is_converted,sort_order
+Open - Not Contacted,New Lead,true,false,1
+Working - Contacted,In Progress,true,false,2
+Closed - Converted,Converted,false,true,3
+Closed - Not Converted,Lost,false,false,4
+Nurturing,Long-term Nurture,true,false,5
+Qualified,Sales Qualified,true,false,6
+Unqualified,Disqualified,false,false,7

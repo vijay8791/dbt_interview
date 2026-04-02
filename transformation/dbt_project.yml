@@ -12,6 +12,7 @@ analysis-paths: ["analyses"]
 test-paths: ["tests"]
 seed-paths: ["seeds"]
 macro-paths: ["macros"]
+docs-paths: ["docs"]
 snapshot-paths: ["snapshots"]
 
 target-path: "target"
@@ -23,6 +24,9 @@ clean-targets:
 models:
   dbt_interview:
     +database: dbt
+    +persist_docs:
+      relation: true
+      columns: true
     intermediate:
       +materialized: table
       +schema: intermediate
@@ -35,3 +39,24 @@ models:
 
 vars:
   "dbt_date:time_zone": "Europe/Berlin"
+
+data_tests:
+  dbt_interview:
+    +store_failures: false
+    +severity: error
+    staging:
+      +severity: warn
+      +store_failures: false
+    intermediate:
+      +severity: error
+      +store_failures: true
+    marts:
+      +severity: error
+      +store_failures: true
+
+on-run-start:
+  - "{{ log('--- dbt run started at: ' ~ run_started_at ~ ' ---', info=true) }}"
+
+on-run-end:
+  - "{{ log('--- dbt run completed. Models: ' ~ results | length ~ ' ---', info=true) }}"
+  - "{{ grant_select(schema_name='marts') }}"

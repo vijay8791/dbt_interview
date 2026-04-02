@@ -1,0 +1,175 @@
+version: 2
+
+models:
+  - name: stg_salesforce__account
+    description: Staged account records — column rename only. One row per account.
+    columns:
+      - name: account_id
+        description: Primary key — Salesforce account ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__campaign
+    description: Staged campaign records. One row per campaign.
+    columns:
+      - name: campaign_id
+        description: Primary key — Salesforce campaign ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__case
+    description: Staged case (support ticket) records. One row per case.
+    columns:
+      - name: case_id
+        description: Primary key — Salesforce case ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__case_history_2
+    description: Status change history for cases. One row per status change event.
+    columns:
+      - name: case_history_id
+        description: Primary key — Salesforce case history ID.
+        tests:
+          - unique
+          - not_null
+      - name: caseid
+        description: Foreign key to stg_salesforce__case.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_salesforce__case')
+              field: case_id
+
+  - name: stg_salesforce__contact
+    description: Staged contact records. One row per contact.
+    columns:
+      - name: contact_id
+        description: Primary key — Salesforce contact ID.
+        tests:
+          - unique
+          - not_null
+      - name: accountid
+        description: Foreign key to stg_salesforce__account.
+        tests:
+          - relationships:
+              to: ref('stg_salesforce__account')
+              field: account_id
+
+  - name: stg_salesforce__lead
+    description: Staged lead records. One row per lead.
+    columns:
+      - name: lead_id
+        description: Primary key — Salesforce lead ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__opportunity
+    description: Staged opportunity records. One row per opportunity.
+    columns:
+      - name: opportunity_id
+        description: Primary key — Salesforce opportunity ID.
+        tests:
+          - unique
+          - not_null
+      - name: accountid
+        description: Foreign key to stg_salesforce__account.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_salesforce__account')
+              field: account_id
+      - name: amount
+        description: Opportunity value — must be positive when present.
+        tests:
+          - is_positive
+      - name: probability
+        description: Win probability — must be positive when present.
+        tests:
+          - is_positive
+
+
+  - name: stg_salesforce__opportunity_history
+    description: Stage and amount change history for opportunities.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - opportunity_history_id
+            - opportunityid
+    columns:
+      - name: opportunity_history_id
+        description: Primary key — Salesforce opportunity history ID.
+        tests:
+          - unique
+          - not_null
+      - name: opportunityid
+        description: Foreign key to stg_salesforce__opportunity.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_salesforce__opportunity')
+                field: opportunity_id
+
+  - name: stg_salesforce__pricebook_entry
+    description: Staged pricebook entry records linking products to price lists.
+    columns:
+      - name: pricebook_entry_id
+        description: Primary key — Salesforce pricebook entry ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__product_2
+    description: Staged product records. One row per product.
+    columns:
+      - name: product_id
+        description: Primary key — Salesforce product ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__record_type
+    description: Staged record type metadata records.
+    columns:
+      - name: record_type_id
+        description: Primary key — Salesforce record type ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__solution
+    description: Staged solution/knowledge base records.
+    columns:
+      - name: solution_id
+        description: Primary key — Salesforce solution ID.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__user
+    description: Staged user records. One row per Salesforce user.
+    columns:
+      - name: user_id
+        description: Primary key — Salesforce user ID.
+        tests:
+          - unique
+          - not_null
+      - name: username
+        description: Salesforce login username — must be globally unique.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_salesforce__user_role
+    description: Staged user role records.
+    columns:
+      - name: user_role_id
+        description: Primary key — Salesforce user role ID.
+        tests:
+          - unique
+          - not_null

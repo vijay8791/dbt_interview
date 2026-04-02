@@ -1,0 +1,183 @@
+version: 2
+
+models:
+  - name: dim_account
+    description: Account dimension with SLA fields, billing location, owner and derived tier.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - account_name
+    columns:
+      - name: account_sk
+        description: Surrogate key — MD5 hash of account_id.
+        tests:
+          - unique
+          - not_null
+      - name: account_id
+        description: Natural key — Salesforce account ID.
+        tests:
+          - unique
+          - not_null
+      - name: account_name
+        description: Account name.
+        tests:
+          - not_null
+      - name: owner_id
+        description: FK to dim_user.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_user')
+                field: user_id
+      - name: account_type
+        description: Salesforce account type.
+        tests:
+          - accepted_values:
+              values: ['Customer - Direct', 'Customer - Channel']
+              severity: warn
+              
+      - name: account_tier
+        description: Derived tier based on annual revenue.
+        tests:
+          - accepted_values:
+              values: ['Enterprise', 'Mid-Market', 'SMB', 'Other']
+      - name: company_size
+        description: Derived company size based on employee count.
+        tests:
+          - accepted_values:
+              values: ['Large', 'Medium', 'Small', 'Unknown']
+
+  - name: dim_contact
+    description: Contact dimension with mailing address, account name and contactability flags.
+    columns:
+      - name: contact_sk
+        description: Surrogate key — MD5 hash of contact_id.
+        tests:
+          - unique
+          - not_null
+      - name: contact_id
+        description: Natural key — Salesforce contact ID.
+        tests:
+          - unique
+          - not_null
+      - name: full_name
+        description: Concatenated first and last name.
+        tests:
+          - not_null
+      - name: account_id
+        description: FK to dim_account.
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+      - name: preferred_contact_method
+        description: Derived preferred contact method.
+        tests:
+          - accepted_values:
+              values: ['Email', 'Phone', 'Mobile', 'None']
+      - name: is_contactable
+        description: True if contact has email, not opted out and not do_not_call.
+        tests:
+          - not_null
+
+  - name: dim_user
+    description: User dimension with role, locale, manager flag and login activity.
+    columns:
+      - name: user_sk
+        description: Surrogate key — MD5 hash of user_id.
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: Natural key — Salesforce user ID.
+        tests:
+          - unique
+          - not_null
+      - name: full_name
+        description: Concatenated first and last name.
+        tests:
+          - not_null
+      - name: username
+        description: Salesforce login username.
+        tests:
+          - unique
+          - not_null
+      - name: is_active
+        description: Whether the user is currently active.
+        tests:
+          - not_null
+      - name: is_manager
+        description: True if this user manages at least one other user.
+        tests:
+          - not_null
+      - name: is_standard_active_user
+        description: True if user is active and standard type.
+        tests:
+          - not_null
+
+  - name: dim_campaign
+    description: Campaign dimension with budget, ROI and performance metrics.
+    columns:
+      - name: campaign_sk
+        description: Surrogate key — MD5 hash of campaign_id.
+        tests:
+          - unique
+          - not_null
+      - name: campaign_id
+        description: Natural key — Salesforce campaign ID.
+        tests:
+          - unique
+          - not_null
+      - name: campaign_name
+        description: Campaign name.
+        tests:
+          - not_null
+      - name: is_over_budget
+        description: True if actual cost exceeds budgeted cost.
+        tests:
+          - not_null
+
+  - name: dim_product
+    description: Product dimension enriched with pricebook pricing and price tier.
+    columns:
+      - name: product_sk
+        description: Surrogate key — MD5 hash of product_id.
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        description: Natural key — Salesforce product ID.
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: Product name.
+        tests:
+          - not_null
+      - name: is_active
+        description: Whether the product is currently active.
+        tests:
+          - not_null
+      - name: price_range
+        description: Derived price tier — Budget/Standard/Premium/Unpriced.
+        tests:
+          - accepted_values:
+              values: ['Premium', 'Standard', 'Budget', 'Unpriced']
+      - name: has_active_pricing
+        description: True if product has at least one active pricebook entry.
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: >
+      Date dimension spanning 2018-01-01 to 2030-12-31 generated by dbt_date.
+      Includes fiscal periods, day of week, week numbers and quarter labels.
+    columns:
+      - name: date_day
+        description: Calendar date — primary key.
+        tests:
+          - unique
+          - not_null

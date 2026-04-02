@@ -1,0 +1,11 @@
+stage_name,stage_label,is_closed,is_won,pipeline_phase,sort_order
+Prospecting,Prospecting,false,false,Early,1
+Qualification,Qualification,false,false,Early,2
+Needs Analysis,Needs Analysis,false,false,Mid,3
+Value Proposition,Value Proposition,false,false,Mid,4
+Id. Decision Makers,Decision Makers,false,false,Mid,5
+Perception Analysis,Perception Analysis,false,false,Late,6
+Proposal/Price Quote,Proposal,false,false,Late,7
+Negotiation/Review,Negotiation,false,false,Late,8
+Closed Won,Closed Won,true,true,Closed,9
+Closed Lost,Closed Lost,true,false,Closed,10

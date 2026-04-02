@@ -1,0 +1,229 @@
+version: 2
+
+models:
+  - name: fct_opportunity
+    description: >
+      Opportunity fact table. Incremental model keyed on opportunity_id.
+      Includes window metrics — rank by amount, running won amount per quarter,
+      LAG for previous stage, deal size category and audit columns.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - opportunity_id
+            - fiscal_year
+            - fiscal_quarter
+    columns:
+      - name: opportunity_sk
+        description: Surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: opportunity_id
+        description: Natural key — Salesforce opportunity ID.
+        tests:
+          - unique:
+              config:
+                tags: ['critical']
+          - not_null:
+              config:
+                tags: ['critical']
+      - name: account_id
+        description: FK to dim_account.
+        tests:
+          - not_null:
+              config:
+                tags: ['critical']
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+              config:
+                tags: ['critical']
+      - name: account_sk
+        description: FK to dim_account (surrogate).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_sk
+      - name: owner_sk
+        description: FK to dim_user (surrogate).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_user')
+                field: user_sk
+      - name: opportunity_outcome
+        description: "{{ doc('opportunity_outcome') }}"
+        tests:
+          - not_null:
+              config:
+                tags: ['critical']
+          - accepted_values:
+              values: ['Won', 'Lost', 'Open']
+              config:
+                tags: ['critical']
+      - name: deal_size_category
+        description: "{{ doc('deal_size_category') }}"
+        tests:
+          - accepted_values:
+              values: ['Small', 'Medium', 'Large', 'Unknown']
+      - name: days_to_close
+        description: "{{ doc('days_to_close') }}"
+      - name: probability
+        description: Win probability — must be between 0 and 100.
+        tests:
+          - is_between:
+              min_value: 0
+              max_value: 100
+      - name: is_closed
+        description: Boolean — opportunity is closed.
+        tests:
+          - not_null
+      - name: is_won
+        description: Boolean — opportunity is won.
+        tests:
+          - not_null
+      - name: dbt_loaded_at
+        description: "{{ doc('dbt_loaded_at') }}"
+        tests:
+          - not_null
+      - name: dbt_model_name
+        description: "{{ doc('dbt_model_name') }}"
+        tests:
+          - not_null
+
+  - name: fct_case
+    description: >
+      Case fact table. Includes SLA tracking, resolution timing,
+      priority flags, resolution speed and window metrics per account.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - case_id
+            - case_number
+    columns:
+      - name: case_sk
+        description: Surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: case_id
+        description: Natural key — Salesforce case ID.
+        tests:
+          - unique:
+              config:
+                tags: ['critical']
+          - not_null:
+              config:
+                tags: ['critical']
+      - name: case_number
+        description: Human-readable case number.
+        tests:
+          - unique
+          - not_null
+      - name: account_sk
+        description: FK to dim_account (surrogate).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_sk
+      - name: account_id
+        description: FK to dim_account (natural).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_account')
+                field: account_id
+      - name: case_status
+        description: Current case status.
+        tests:
+          - not_null
+      - name: priority
+        description: Case priority.
+        tests:
+          - accepted_values:
+              values: ['Low', 'Medium', 'High', 'Critical']
+              severity: warn
+      - name: resolution_speed
+        description: "{{ doc('resolution_speed') }}"
+        tests:
+          - accepted_values:
+              values: ['Fast', 'Normal', 'Slow', 'Open']
+      - name: hours_to_resolve
+        description: "{{ doc('hours_to_resolve') }}"
+        tests:
+          - is_between:
+              min_value: 0
+              max_value: 8760
+              config:
+                severity: warn
+      - name: is_closed
+        description: Boolean — case is closed.
+        tests:
+          - not_null
+      - name: dbt_loaded_at
+        description: "{{ doc('dbt_loaded_at') }}"
+        tests:
+          - not_null
+      - name: dbt_model_name
+        description: "{{ doc('dbt_model_name') }}"
+        tests:
+          - not_null
+
+  - name: fct_lead
+    description: >
+      Lead fact table. Includes lifecycle stage, conversion tracking,
+      hot lead flag, owner conversion rate and window metrics.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - lead_id
+            - lead_lifecycle_stage
+    columns:
+      - name: lead_sk
+        description: Surrogate key.
+        tests:
+          - unique
+          - not_null
+      - name: lead_id
+        description: Natural key — Salesforce lead ID.
+        tests:
+          - unique:
+              config:
+                tags: ['critical']
+          - not_null:
+              config:
+                tags: ['critical']
+      - name: owner_sk
+        description: FK to dim_user (surrogate).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_user')
+                field: user_sk
+      - name: lead_status
+        description: Current lead status.
+        tests:
+          - not_null
+      - name: lead_lifecycle_stage
+        description: "{{ doc('lead_lifecycle_stage') }}"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Converted', 'Deleted', 'Active']
+      - name: days_to_convert
+        description: "{{ doc('days_to_convert') }}"
+      - name: is_converted
+        description: Boolean — lead has been converted.
+        tests:
+          - not_null
+      - name: dbt_loaded_at
+        description: "{{ doc('dbt_loaded_at') }}"
+        tests:
+          - not_null
+      - name: dbt_model_name
+        description: "{{ doc('dbt_model_name') }}"
+        tests:
+          - not_null

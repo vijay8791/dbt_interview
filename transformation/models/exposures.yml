@@ -1,0 +1,61 @@
+version: 2
+
+exposures:
+  - name: sales_performance_dashboard
+    label: Sales Performance Dashboard
+    type: dashboard
+    maturity: high
+    url: https://lookerstudio.google.com/sales-performance
+    description: >
+      Executive dashboard tracking opportunity pipeline, win rates,
+      deal size distribution and revenue by account and region.
+      Built on fct_opportunity and dim_account.
+
+    depends_on:
+      - ref('fct_opportunity')
+      - ref('dim_account')
+      - ref('dim_user')
+      - ref('dim_campaign')
+      - ref('dim_date')
+
+    owner:
+      name: Vijay S
+      email: vijay@company.com
+
+  - name: support_operations_report
+    label: Support Operations Report
+    type: dashboard
+    maturity: medium
+    description: >
+      Weekly report tracking case resolution times, SLA compliance,
+      escalation rates and agent performance.
+      Built on fct_case and dim_contact.
+
+    depends_on:
+      - ref('fct_case')
+      - ref('dim_account')
+      - ref('dim_contact')
+      - ref('dim_user')
+      - ref('dim_date')
+
+    owner:
+      name: Vijay S
+      email: vijay@company.com
+
+  - name: lead_conversion_analysis
+    label: Lead Conversion Analysis
+    type: ml
+    maturity: low
+    description: >
+      Machine learning model predicting lead conversion probability
+      based on lead source, industry, company size and owner history.
+      Built on fct_lead and dim_user.
+
+    depends_on:
+      - ref('fct_lead')
+      - ref('dim_user')
+      - ref('dim_date')
+
+    owner:
+      name: Vijay S
+      email: vijay@company.com

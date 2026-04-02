@@ -4,18 +4,123 @@ sources:
   - name: salesforce
     database: dbt
     schema: raw
+    description: Raw Salesforce CRM data.
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    loaded_at_field: systemmodstamp
     tables:
       - name: account
+        description: Raw account records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: campaign
+        description: Raw campaign records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: case
+        description: Raw case records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: case_history_2
+        description: Raw case history records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: contact
+        description: Raw contact records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: lead
+        description: Raw lead records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: opportunity
+        description: Raw opportunity records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: accountid
+            tests:
+              - not_null
+
       - name: opportunity_history
+        description: Raw opportunity history records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: pricebook_entry
+        description: Raw pricebook entry records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: product_2
+        description: Raw product records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: record_type
+        description: Raw record type records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: solution
+        description: Raw solution records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: user
+        description: Raw user records from Salesforce.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
       - name: user_role
+        description: Raw user role records.
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null

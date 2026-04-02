@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: int_opportunity_enriched
+    description: >
+      Opportunities joined with accounts, users, campaigns and stage seed.
+      One row per opportunity. Business logic layer — no raw source joins in marts.
+    columns:
+      - name: opportunity_id
+        description: Primary key — Salesforce opportunity ID.
+        tests:
+          - unique
+          - not_null
+      - name: opportunity_outcome
+        description: Derived field — Won, Lost or Open.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Won', 'Lost', 'Open']
+      - name: accountid
+        description: FK to stg_salesforce__account.
+        tests:
+          - not_null
+      - name: pipeline_phase
+        description: High level pipeline phase from seed.
+        tests:
+          - accepted_values:
+              values: ['Early', 'Mid', 'Late', 'Closed']
+              severity: warn
+
+  - name: int_case_enriched
+    description: >
+      Cases joined with accounts, contacts, users and case history aggregation.
+      One row per case.
+    columns:
+      - name: case_id
+        description: Primary key — Salesforce case ID.
+        tests:
+          - unique
+          - not_null
+      - name: case_status
+        description: Current case status.
+        tests:
+          - not_null
+
+  - name: int_lead_enriched
+    description: >
+      Leads joined with users and lead status seed.
+      One row per lead.
+    columns:
+      - name: lead_id
+        description: Primary key — Salesforce lead ID.
+        tests:
+          - unique
+          - not_null
+      - name: lead_lifecycle_stage
+        description: Derived field — Converted, Deleted or Active.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Converted', 'Deleted', 'Active']

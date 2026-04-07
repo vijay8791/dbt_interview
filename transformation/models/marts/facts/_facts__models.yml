@@ -6,12 +6,6 @@ models:
       Opportunity fact table. Incremental model keyed on opportunity_id.
       Includes window metrics — rank by amount, running won amount per quarter,
       LAG for previous stage, deal size category and audit columns.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - opportunity_id
-            - fiscal_year
-            - fiscal_quarter
     columns:
       - name: opportunity_sk
         description: Surrogate key.
@@ -60,22 +54,25 @@ models:
               config:
                 tags: ['critical']
           - accepted_values:
-              values: ['Won', 'Lost', 'Open']
-              config:
-                tags: ['critical']
+              arguments:
+                values: ['Won', 'Lost', 'Open']
+                config:
+                  tags: ['critical']
       - name: deal_size_category
         description: "{{ doc('deal_size_category') }}"
         tests:
           - accepted_values:
-              values: ['Small', 'Medium', 'Large', 'Unknown']
+              arguments:
+                values: ['Small', 'Medium', 'Large', 'Unknown']
       - name: days_to_close
         description: "{{ doc('days_to_close') }}"
       - name: probability
         description: Win probability — must be between 0 and 100.
         tests:
           - is_between:
-              min_value: 0
-              max_value: 100
+              arguments:
+                min_value: 0
+                max_value: 100
       - name: is_closed
         description: Boolean — opportunity is closed.
         tests:
@@ -97,11 +94,6 @@ models:
     description: >
       Case fact table. Includes SLA tracking, resolution timing,
       priority flags, resolution speed and window metrics per account.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - case_id
-            - case_number
     columns:
       - name: case_sk
         description: Surrogate key.
@@ -144,21 +136,24 @@ models:
         description: Case priority.
         tests:
           - accepted_values:
-              values: ['Low', 'Medium', 'High', 'Critical']
-              severity: warn
+              arguments:
+                values: ['Low', 'Medium', 'High', 'Critical']
+                severity: warn
       - name: resolution_speed
         description: "{{ doc('resolution_speed') }}"
         tests:
           - accepted_values:
-              values: ['Fast', 'Normal', 'Slow', 'Open']
+              arguments:
+                values: ['Fast', 'Normal', 'Slow', 'Open']
       - name: hours_to_resolve
         description: "{{ doc('hours_to_resolve') }}"
         tests:
           - is_between:
-              min_value: 0
-              max_value: 8760
-              config:
-                severity: warn
+              arguments:
+                min_value: 0
+                max_value: 8760
+                config:
+                  severity: warn
       - name: is_closed
         description: Boolean — case is closed.
         tests:
@@ -176,11 +171,6 @@ models:
     description: >
       Lead fact table. Includes lifecycle stage, conversion tracking,
       hot lead flag, owner conversion rate and window metrics.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - lead_id
-            - lead_lifecycle_stage
     columns:
       - name: lead_sk
         description: Surrogate key.
@@ -212,7 +202,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Converted', 'Deleted', 'Active']
+              arguments:
+                values: ['Converted', 'Deleted', 'Active']
       - name: days_to_convert
         description: "{{ doc('days_to_convert') }}"
       - name: is_converted

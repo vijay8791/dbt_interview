@@ -59,4 +59,3 @@ on-run-start:
 
 on-run-end:
   - "{{ log('--- dbt run completed. Models: ' ~ results | length ~ ' ---', info=true) }}"
-  - "{{ grant_select(schema_name='marts') }}"

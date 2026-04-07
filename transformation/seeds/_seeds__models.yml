@@ -32,7 +32,8 @@ seeds:
         tests:
           - not_null
           - accepted_values:
-              values: ['Early', 'Mid', 'Late', 'Closed']
+              arguments:
+                values: ['Early', 'Mid', 'Late', 'Closed']
       - name: sort_order
         description: Integer sort order for funnel reporting.
         tests:

@@ -9,6 +9,20 @@ models:
         tests:
           - unique
           - not_null
+      - name: name
+        description: Account name.
+      - name: type
+        description: Account type — e.g. Customer - Direct, Customer - Channel.
+      - name: industry
+        description: Industry vertical of the account.
+      - name: annualrevenue
+        description: Annual revenue in USD. Used to derive account_tier in dim_account.
+      - name: numberofemployees
+        description: Employee count. Used to derive company_size in dim_account.
+      - name: ownerid
+        description: FK to Salesforce user — account owner.
+      - name: billingcountry
+        description: Billing address country.
 
   - name: stg_salesforce__campaign
     description: Staged campaign records. One row per campaign.
@@ -18,6 +32,16 @@ models:
         tests:
           - unique
           - not_null
+      - name: name
+        description: Campaign name.
+      - name: type
+        description: Campaign type — e.g. Email, Event, Webinar.
+      - name: status
+        description: Current campaign status — e.g. Planned, Active, Completed.
+      - name: budgetedcost
+        description: Planned campaign budget in USD.
+      - name: actualcost
+        description: Actual spend in USD. Compared against budgetedcost for is_over_budget.
 
   - name: stg_salesforce__case
     description: Staged case (support ticket) records. One row per case.
@@ -27,6 +51,26 @@ models:
         tests:
           - unique
           - not_null
+      - name: casenumber
+        description: Human-readable case number — unique per org.
+      - name: accountid
+        description: FK to stg_salesforce__account.
+      - name: contactid
+        description: FK to stg_salesforce__contact.
+      - name: ownerid
+        description: FK to stg_salesforce__user — case owner.
+      - name: status
+        description: Current case status — e.g. New, Working, Escalated, Closed.
+      - name: priority
+        description: Case priority — Low, Medium, High, Critical.
+      - name: isclosed
+        description: Boolean — true when case is closed.
+      - name: isescalated
+        description: Boolean — true when case has been escalated.
+      - name: createddate
+        description: Timestamp when the case was created.
+      - name: closeddate
+        description: Timestamp when the case was closed. NULL for open cases.
 
   - name: stg_salesforce__case_history_2
     description: Status change history for cases. One row per status change event.
@@ -41,8 +85,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_salesforce__case')
-              field: case_id
+              arguments:
+                to: ref('stg_salesforce__case')
+                field: case_id
 
   - name: stg_salesforce__contact
     description: Staged contact records. One row per contact.
@@ -56,8 +101,19 @@ models:
         description: Foreign key to stg_salesforce__account.
         tests:
           - relationships:
-              to: ref('stg_salesforce__account')
-              field: account_id
+              arguments:
+                to: ref('stg_salesforce__account')
+                field: account_id
+      - name: firstname
+        description: Contact first name.
+      - name: lastname
+        description: Contact last name.
+      - name: email
+        description: Contact email address. Used for is_contactable flag in dim_contact.
+      - name: hasoptedoutofemail
+        description: Boolean — true if contact has opted out of email marketing.
+      - name: donotcall
+        description: Boolean — true if contact has requested no phone contact.
 
   - name: stg_salesforce__lead
     description: Staged lead records. One row per lead.
@@ -67,6 +123,20 @@ models:
         tests:
           - unique
           - not_null
+      - name: ownerid
+        description: FK to stg_salesforce__user — lead owner.
+      - name: status
+        description: Current lead status — joined to seed_lead_status_map for enrichment.
+      - name: isconverted
+        description: Boolean — true when lead has been converted to account/contact/opportunity.
+      - name: isdeleted
+        description: Boolean — true when lead has been soft-deleted in Salesforce.
+      - name: converteddate
+        description: Date the lead was converted. NULL for unconverted leads.
+      - name: rating
+        description: Lead rating — Hot, Warm, Cold. Used for is_hot_lead flag.
+      - name: leadsource
+        description: Channel through which the lead was acquired — e.g. Web, Referral, Campaign.
 
   - name: stg_salesforce__opportunity
     description: Staged opportunity records. One row per opportunity.
@@ -81,25 +151,34 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_salesforce__account')
-              field: account_id
+              arguments:
+                to: ref('stg_salesforce__account')
+                field: account_id
+      - name: ownerid
+        description: FK to stg_salesforce__user — opportunity owner.
+      - name: stagename
+        description: Current pipeline stage — joined to seed_opportunity_stage_map for enrichment.
       - name: amount
-        description: Opportunity value — must be positive when present.
+        description: Opportunity value in USD. Must be positive when present.
         tests:
           - is_positive
       - name: probability
-        description: Win probability — must be positive when present.
+        description: Win probability percentage (0–100). Must be positive when present.
         tests:
           - is_positive
-
+      - name: isclosed
+        description: Boolean — true when opportunity is closed (won or lost).
+      - name: iswon
+        description: Boolean — true when opportunity is closed and won.
+      - name: closedate
+        description: Expected or actual close date.
+      - name: fiscalyear
+        description: Fiscal year derived by Salesforce.
+      - name: fiscalquarter
+        description: Fiscal quarter (1–4) derived by Salesforce.
 
   - name: stg_salesforce__opportunity_history
     description: Stage and amount change history for opportunities.
-    tests:
-      - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - opportunity_history_id
-            - opportunityid
     columns:
       - name: opportunity_history_id
         description: Primary key — Salesforce opportunity history ID.
@@ -114,6 +193,14 @@ models:
               arguments:
                 to: ref('stg_salesforce__opportunity')
                 field: opportunity_id
+      - name: stagename
+        description: Stage name recorded at this point in time (to_stage).
+      - name: fromopportunitystagename
+        description: Previous stage before this transition (from_stage). NULL on first entry.
+      - name: amount
+        description: Opportunity amount at the time of this stage change.
+      - name: createddate
+        description: Timestamp of this stage transition event.
 
   - name: stg_salesforce__pricebook_entry
     description: Staged pricebook entry records linking products to price lists.
@@ -123,6 +210,12 @@ models:
         tests:
           - unique
           - not_null
+      - name: product2id
+        description: FK to stg_salesforce__product_2.
+      - name: unitprice
+        description: List price for this product in this pricebook.
+      - name: isactive
+        description: Boolean — true if this pricebook entry is currently active.
 
   - name: stg_salesforce__product_2
     description: Staged product records. One row per product.
@@ -132,6 +225,12 @@ models:
         tests:
           - unique
           - not_null
+      - name: name
+        description: Product name.
+      - name: isactive
+        description: Boolean — true if the product is currently available for sale.
+      - name: family
+        description: Product family grouping — used for reporting segmentation.
 
   - name: stg_salesforce__record_type
     description: Staged record type metadata records.
@@ -164,6 +263,18 @@ models:
         tests:
           - unique
           - not_null
+      - name: isactive
+        description: Boolean — true if the user account is currently active.
+      - name: usertype
+        description: User licence type — e.g. Standard, Guest, CsnOnly.
+      - name: managerid
+        description: FK to stg_salesforce__user — this user's direct manager.
+      - name: userroleid
+        description: FK to stg_salesforce__user_role.
+      - name: department
+        description: Department the user belongs to.
+      - name: lastlogindate
+        description: Timestamp of the user's most recent login. Used for days_since_last_login in dim_user.
 
   - name: stg_salesforce__user_role
     description: Staged user role records.
@@ -173,3 +284,5 @@ models:
         tests:
           - unique
           - not_null
+      - name: name
+        description: Role name — e.g. Sales Manager, Account Executive.

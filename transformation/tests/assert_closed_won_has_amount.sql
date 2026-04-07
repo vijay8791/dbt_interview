@@ -1,7 +1,7 @@
 select
     opportunity_id,
-    stagename,
+    opportunity_outcome,
     amount
-from {{ ref('stg_salesforce__opportunity') }}
-where iswon = true
+from {{ ref('fct_opportunity') }}
+where is_won = true
   and (amount is null or amount <= 0)

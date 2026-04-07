@@ -8,9 +8,9 @@
     )
 }}
 
-with opportunity_history as (
+with stage_history as (
 
-    select * from {{ ref('stg_salesforce__opportunity_history') }}
+    select * from {{ ref('int_opportunity_stage_history') }}
 
     {% if is_incremental() %}
         where createddate > (select max(created_at) from {{ this }})
@@ -18,59 +18,49 @@ with opportunity_history as (
 
 ),
 
-opportunities as (
-
-    select
-        opportunity_id,
-        name as opportunity_name,
-        accountid
-    from {{ ref('stg_salesforce__opportunity') }}
-
-),
-
-accounts as (
-
-    select
-        account_id,
-        name as account_name
-    from {{ ref('stg_salesforce__account') }}
-
-),
-
 final as (
 
     select
-        {{ dbt_utils.generate_surrogate_key(['oh.opportunity_history_id']) }}
-                                                as history_sk,
-        oh.opportunity_history_id,
-        oh.opportunityid                        as opportunity_id,
-        opp.opportunity_name,
-        acc.account_name,
-        oh.stagename                            as to_stage,
-        oh.fromopportunitystagename             as from_stage,
-        oh.amount,
-        oh.probability,
-        oh.closedate,
-        oh.forecastcategory,
-        oh.createddate                          as created_at,
-        oh.isdeleted,
+        -- surrogate key
+        {{ dbt_utils.generate_surrogate_key(['opportunity_history_id']) }}
+                                            as history_sk,
 
-        -- derived
-        case
-            when oh.fromopportunitystagename is null then true
-            else false
-        end                                     as is_first_stage,
+        -- natural key
+        opportunity_history_id,
 
-        case
-            when oh.stagename in ('Closed Won', 'Closed Lost') then true
-            else false
-        end                                     as is_final_stage,
+        -- foreign keys (natural)
+        opportunityid                       as opportunity_id,
+        ownerid                             as owner_id,
 
+        -- context (denormalized for BI convenience)
+        opportunity_name,
+        account_name,
+        account_industry,
+
+        -- stage transition
+        to_stage,
+        from_stage,
+        is_first_stage,
+        is_final_stage,
+        is_won_stage,
+
+        -- measures at point in time
+        amount,
+        probability,
+        closedate,
+        forecastcategory,
+
+        -- timing
+        days_in_prev_stage,
+        createddate                         as created_at,
+
+        -- flags
+        isdeleted,
+
+        -- audit columns
         {{ generate_audit_columns() }}
 
-    from opportunity_history    oh
-    left join opportunities     opp on oh.opportunityid = opp.opportunity_id
-    left join accounts          acc on opp.accountid    = acc.account_id
+    from stage_history
 
 )
 

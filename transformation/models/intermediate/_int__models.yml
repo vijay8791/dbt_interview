@@ -16,7 +16,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Won', 'Lost', 'Open']
+              arguments:
+                values: ['Won', 'Lost', 'Open']
       - name: accountid
         description: FK to stg_salesforce__account.
         tests:
@@ -25,8 +26,9 @@ models:
         description: High level pipeline phase from seed.
         tests:
           - accepted_values:
-              values: ['Early', 'Mid', 'Late', 'Closed']
-              severity: warn
+              arguments:
+                values: ['Early', 'Mid', 'Late', 'Closed']
+                severity: warn
 
   - name: int_case_enriched
     description: >
@@ -40,6 +42,35 @@ models:
           - not_null
       - name: case_status
         description: Current case status.
+        tests:
+          - not_null
+
+  - name: int_opportunity_stage_history
+    description: >
+      Opportunity stage history joined with opportunity and account context.
+      One row per stage transition event. Derives is_first_stage, is_final_stage,
+      is_won_stage and days_in_prev_stage using a window function.
+      Used as the single input to fct_opportunity_stage_history.
+    columns:
+      - name: opportunity_history_id
+        description: Primary key — Salesforce opportunity history ID.
+        tests:
+          - unique
+          - not_null
+      - name: opportunityid
+        description: FK to stg_salesforce__opportunity.
+        tests:
+          - not_null
+      - name: to_stage
+        description: Stage name after this transition.
+        tests:
+          - not_null
+      - name: is_first_stage
+        description: True if this is the opening stage (no prior stage recorded).
+        tests:
+          - not_null
+      - name: is_final_stage
+        description: True if to_stage is Closed Won or Closed Lost.
         tests:
           - not_null
 
@@ -58,4 +89,5 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Converted', 'Deleted', 'Active']
+              arguments:
+                values: ['Converted', 'Deleted', 'Active']
